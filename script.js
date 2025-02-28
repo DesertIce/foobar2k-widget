@@ -5,11 +5,6 @@
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 
-const client_id = urlParams.get("client_id") || "";
-const client_secret = urlParams.get("client_secret") || "";
-let refresh_token = urlParams.get("refresh_token") || "";
-let access_token = "";
-
 const visibilityDuration = urlParams.get("duration") || 0;
 const hideAlbumArt = urlParams.has("hideAlbumArt");
 

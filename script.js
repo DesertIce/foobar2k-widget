@@ -14,23 +14,30 @@ const visibilityDuration = urlParams.get("duration") || 0;
 const hideAlbumArt = true; //urlParams.has("hideAlbumArt");
 
 let currentState = false;
-let currentSongUri = "";
+let currentSongUri = -1;
 
+const axiosCLient = axios.create({
+    baseURL: 'http://localhost:8880/api',
+    mode: 'no-cors',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
 
 async function GetCurrentlyPlaying() {
-    // Get the current player information from Spotify
-    await fetch(`http://localhost:8880/api/player?columns=%artist%,%title%`, {
+    
+    await axiosCLient.get(`/player?columns=%artist%,%title%`, {
         method: "GET",
         mode: 'no-cors',
         headers: {
             'Content-Type': 'application/json'
         }
     }).then(async (response) => {
-        if (response.ok)
+        if (response.status == 200)
             {
-                const responseData = await response.json();
-                console.debug(responseData);
-                UpdatePlayer(responseData);
+                
+                console.debug(response.data);
+                UpdatePlayer(response.data);
             }
     }).then(() => {
         setTimeout(() => {
@@ -48,13 +55,13 @@ async function GetCurrentlyPlaying() {
 }
 
 function UpdatePlayer(data) {
-	const isPlaying = data.activeItem.playbackState === 'playing';							// The play/pause state of the player
-	const songUri =  data.activeItem.index;
+	const isPlaying = data.player.activeItem.playbackState === 'playing';							// The play/pause state of the player
+	const songUri =  data.player.activeItem.index;
 	const albumArt =  `images/placeholder-album-art.png`;					// The album art URL
-	const artist = `${data.activeItem.columns[0]}`;				// Name of the artist
-	const name = `${data.activeItem.columns[1]}`;							// Name of the song
-	const duration = `${data.activeItem.duration}`;			// The duration of the song in seconds
-	const progress = `${data.activeItem.position}`;				// The current position in seconds
+	const artist = `${data.player.activeItem.columns[0]}`;				// Name of the artist
+	const name = `${data.player.activeItem.columns[1]}`;							// Name of the song
+	const duration = `${data.player.activeItem.duration}`;			// The duration of the song in seconds
+	const progress = `${data.player.activeItem.position}`;				// The current position in seconds
 
 	// Set the visibility of the player, but only if the state is different than the last time we checked
 	if (isPlaying != currentState) {

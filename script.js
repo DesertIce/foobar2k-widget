@@ -11,7 +11,7 @@ let refresh_token = urlParams.get("refresh_token") || "";
 let access_token = "";
 
 const visibilityDuration = urlParams.get("duration") || 0;
-const hideAlbumArt = true; //urlParams.has("hideAlbumArt");
+const hideAlbumArt = urlParams.has("hideAlbumArt");
 
 let currentState = false;
 let currentSongUri = -1;
@@ -35,8 +35,6 @@ async function GetCurrentlyPlaying() {
     }).then(async (response) => {
         if (response.status == 200)
             {
-                
-                console.debug(response.data);
                 UpdatePlayer(response.data);
             }
     }).then(() => {
@@ -55,9 +53,8 @@ async function GetCurrentlyPlaying() {
 }
 
 function UpdatePlayer(data) {
-	const isPlaying = data.player.activeItem.playbackState === 'playing';							// The play/pause state of the player
+	const isPlaying = data.player.playbackState === 'playing';							// The play/pause state of the player
 	const songUri =  data.player.activeItem.index;
-	const albumArt =  `images/placeholder-album-art.png`;					// The album art URL
 	const artist = `${data.player.activeItem.columns[0]}`;				// Name of the artist
 	const name = `${data.player.activeItem.columns[1]}`;							// Name of the song
 	const duration = `${data.player.activeItem.duration}`;			// The duration of the song in seconds
@@ -100,13 +97,25 @@ function UpdatePlayer(data) {
 				}
 			}, 500);
 	
+            // Set thumbnail
+	        let albumArt =  `images/placeholder-album-art.png`;					// The album art URL
+            axiosCLient.get('artwork/current').
+                then(async (response) => {
+                    if (response.status == 200)
+                        {
+                            albumArt = "http://localhost:8880/api/artwork/current"
+                        }
+            }).catch((error) => {
+                console.error(error);
+            }).finally(() => {
+                UpdateAlbumArt(document.getElementById("albumArt"), albumArt);
+                UpdateAlbumArt(document.getElementById("backgroundImage"), albumArt);
+            });
+
 			currentSongUri = songUri;
 		}
 	}
 
-	// Set thumbnail
-	UpdateAlbumArt(document.getElementById("albumArt"), albumArt);
-	UpdateAlbumArt(document.getElementById("backgroundImage"), albumArt);
 
 	// Set song info
 	UpdateTextLabel(document.getElementById("artistLabel"), artist);
@@ -116,16 +125,10 @@ function UpdatePlayer(data) {
 	const progressPerc = ((progress / duration) * 100);			// Progress expressed as a percentage
 	const progressTime = ConvertSecondsToMinutesSoThatItLooksBetterOnTheOverlay(progress);
 	const timeRemaining = ConvertSecondsToMinutesSoThatItLooksBetterOnTheOverlay(duration - progress);
-	console.debug(`Progress: ${progressTime}`);
-	console.debug(`Time Remaining: ${timeRemaining}`);
+
 	document.getElementById("progressBar").style.width = `${progressPerc}%`;
 	document.getElementById("progressTime").innerHTML = progressTime;
 	document.getElementById("timeRemaining").innerHTML = `-${timeRemaining}`;
-
-	setTimeout(() => {
-		document.getElementById("albumArtBack").src = albumArt;
-		document.getElementById("backgroundImageBack").src = albumArt;
-	}, 1000);
 }
 
 function UpdateTextLabel(div, text) {

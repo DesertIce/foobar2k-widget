@@ -8,10 +8,10 @@ const urlParams = new URLSearchParams(queryString);
 const visibilityDuration = urlParams.get("duration") || 0;
 const hideAlbumArt = urlParams.has("hideAlbumArt");
 
-let currentState = false;
+let currentState = true;
 let currentSongUri = -1;
 
-const axiosCLient = axios.create({
+const axiosClient = axios.create({
     baseURL: 'http://localhost:8880/api',
     mode: 'no-cors',
     headers: {
@@ -21,7 +21,7 @@ const axiosCLient = axios.create({
 
 async function GetCurrentlyPlaying() {
     
-    await axiosCLient.get(`/player?columns=%artist%,%title%`, {
+    await axiosClient.get(`/player?columns=%artist%,%title%`, {
         method: "GET",
         mode: 'no-cors',
         headers: {
@@ -94,7 +94,7 @@ function UpdatePlayer(data) {
 	
             // Set thumbnail
 	        let albumArt =  `images/placeholder-album-art.png`;					// The album art URL
-            axiosCLient.get('artwork/current').
+            axiosClient.get('artwork/current').
                 then(async (response) => {
                     if (response.status == 200)
                         {
